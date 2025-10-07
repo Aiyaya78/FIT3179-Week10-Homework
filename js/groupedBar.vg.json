@@ -1,0 +1,137 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Grouped bar chart: GE14 vs GE15 turnout by state with legend selection, sorted by GE15 turnout, with two text annotations.",
+  "title": {
+      "text": "Comparison of State-Level Voter Turnout in Malaysia’s 14th (GE14, 2018) and 15th (GE15, 2022) General Elections",
+      "anchor": "middle",        
+      "fontSize": 16,
+      "fontWeight": "bold",
+      "dy": -5,                 
+      "color": "#111"
+    },
+  "width": 850,
+  "height": 400,
+
+  "data": {
+    "url": "https://raw.githubusercontent.com/Aiyaya78/FIT3179-Week10-Homework/main/data/state_turnout_ge1415.csv",
+    "format": { "type": "csv" }
+  },
+
+  "transform": [
+    {
+      "lookup": "state",
+      "from": {
+        "data": {
+          "values": [
+            { "state": "W.P. Kuala Lumpur", "state_full": "Wilayah Persekutuan Kuala Lumpur" },
+            { "state": "W.P. Putrajaya",   "state_full": "Wilayah Persekutuan Putrajaya" },
+            { "state": "W.P. Labuan",      "state_full": "Wilayah Persekutuan Labuan" }
+          ]
+        },
+        "key": "state",
+        "fields": ["state_full"]
+      }
+    },
+    { "calculate": "isValid(datum.state_full) ? datum.state_full : datum.state", "as": "state_label" },
+
+    { "calculate": "datum.election == 'GE15' ? datum.turnout_percent : null", "as": "turnout_ge15" },
+    {
+      "joinaggregate": [
+        { "op": "max", "field": "turnout_ge15", "as": "sort_ge15" }
+      ],
+      "groupby": ["state"]
+    }
+  ],
+
+  "layer": [
+    {
+      "params": [
+        {
+          "name": "election_legend_sel",
+          "select": { "type": "point", "fields": ["election"] },
+          "bind": "legend"
+        }
+      ],
+      "mark": { "type": "bar" },
+      "encoding": {
+        "x": {
+          "field": "state",
+          "type": "nominal",
+          "axis": { "title": "State", "labelAngle": -45 },
+          "sort": { "field": "sort_ge15", "order": "descending" }
+        },
+        "xOffset": { "field": "election" },
+        "y": {
+          "field": "turnout_percent",
+          "type": "quantitative",
+          "title": "Voter Turnout Rate (%)",
+          "scale": { "domain": [0, 100] }
+        },
+        "color": {
+          "field": "election",
+          "type": "nominal",
+          "title": "Election",
+          "scale": {
+            "domain": ["GE14", "GE15"],
+            "range": ["#984ea3", "#4daf4a"]
+          },
+          "legend": {
+            "titleFontSize": 14,
+            "labelFontSize": 13,
+            "titleFontWeight": "bold",
+            "orient": "right",
+            "symbolSize": 150,
+            "symbolType": "square",
+            "padding": 10
+          }
+        },
+        "opacity": {
+          "condition": { "param": "election_legend_sel", "value": 1 },
+          "value": 0.2
+        },
+        "tooltip": [
+          { "field": "state_label", "title": "State" },
+          { "field": "election", "title": "Election" },
+          { "field": "turnout_percent", "title": "Voter Turnout (%)", "format": ".2f" },
+          { "field": "registered_voters", "title": "Registered Voters", "format": "," },
+          { "field": "voted", "title": "Voted", "format": "," }
+        ]
+      }
+    },
+
+    {
+      "mark": {
+        "type": "rect",
+        "cornerRadius": 6,
+        "fill": "whitesmoke",
+        "stroke": "#000000",
+        "strokeWidth": 3,
+        "opacity": 0.9
+      },
+      "encoding": {
+        "x": { "value": 580 },
+        "x2": { "value": 820 },
+        "y": { "value": 10 },
+        "y2": { "value": 50 }
+      }
+    },
+
+    {
+      "mark": {
+        "type": "text",
+        "align": "center",
+        "baseline": "top",
+        "x": 700,
+        "y": 20,
+        "fontSize": 11,
+        "color": "#444444",
+        "lineBreak": "\n"
+      },
+      "encoding": {
+        "text": {
+          "value": "Voter turnout dropped in every Malaysian\nstate from GE14 to GE15."
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": {
+            "text": "Voter Turnout by State in Malaysia’s 15th General Election (2022)",
+            "fontSize": 16,          
+            "anchor": "middle"       
+          },
+  "width": 850,
+  "height": 500,
+  "autosize": {"type": "fit", "contains": "padding"},
+  "projection": { "type": "mercator" },
+
+  "layer": [
+    {
+      "data": {
+        "url": "https://raw.githubusercontent.com/Aiyaya78/FIT3179-Week9-Homework/main/js/ne_10m.topojson",
+        "format": { "type": "topojson", "feature": "ne_10m_graticules_5" }
+      },
+      "mark": { "type": "geoshape", "fill": null, "stroke": "lightgray", "strokeWidth": 0.5 }
+    },
+
+    {
+      "data": {
+        "url": "https://raw.githubusercontent.com/Aiyaya78/FIT3179-Week9-Homework/main/js/ne_10m.topojson",
+        "format": { "type": "topojson", "feature": "ne_10m_admin_1_states_provinces" }
+      },
+      "transform": [
+        { "filter": "datum.properties.adm0_a3 == 'MYS'" },
+        { "calculate": "datum.properties.name", "as": "state_name" },
+        {
+          "lookup": "state_name",
+          "from": {
+            "data": {
+              "url": "https://raw.githubusercontent.com/Aiyaya78/FIT3179-Week9-Homework/main/data/state_turnout_ge15.csv"
+            },
+            "key": "state",
+            "fields": ["turnout_percent", "registered_voters", "voted"]
+          }
+        },
+        { "calculate": "toNumber(datum.turnout_percent)", "as": "turnout_num" }
+      ],
+      "mark": { "type": "geoshape", "stroke": "white", "strokeWidth": 0.7 },
+      "encoding": {
+        "color": {
+          "field": "turnout_num",
+          "type": "quantitative",
+          "title": "Voter Turnout Rate (%)",
+          "scale": {
+            "type": "threshold",
+            "domain": [70, 75, 80],
+            "range": ["#feedde", "#fdbe85", "#fd8d3c", "#d94701"]
+          },
+          "legend": { "title": "Voter Turnout Rate(%)" }
+        },
+        "tooltip": [
+          { "field": "state_name", "type": "nominal", "title": "State" },
+          { "field": "turnout_num", "type": "quantitative", "title": "Voter Turnout (%)", "format": ".2f" },
+          { "field": "registered_voters", "type": "quantitative", "title": "Registered Voters" ,"format": ","},
+          { "field": "voted", "type": "quantitative", "title": "Voted","format": "," }
+        ]
+      }
+    },
+
+    {
+      "data": {
+        "url": "https://raw.githubusercontent.com/Aiyaya78/FIT3179-Week9-Homework/main/js/ne_10m.topojson",
+        "format": { "type": "topojson", "feature": "ne_10m_admin_1_states_provinces" }
+      },
+      "transform": [
+        { "filter": "datum.properties.adm0_a3 == 'MYS'" },
+        {
+          "filter": "!(datum.properties.name == 'Labuan' || datum.properties.name == 'Putrajaya' || datum.properties.name == 'Kuala Lumpur')"
+        }
+      ],
+      "mark": { "type": "text", "fontSize": 10, "fontWeight": "normal" },
+      "encoding": {
+        "longitude": { "field": "properties.longitude", "type": "quantitative" },
+        "latitude": { "field": "properties.latitude", "type": "quantitative" },
+        "text": { "field": "properties.name" },
+        "color": { "value": "#222" }
+      }
+    }
+  ]
+}
+    
+
+  
+
+
+  
